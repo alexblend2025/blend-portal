@@ -26,7 +26,7 @@ const FIELDS = {
 }
 
 async function getProjectData(projectCode: string) {
-    const url = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}?filterByFormula={${FIELDS.projectCode}}="${projectCode}"`
+    const url = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}?filterByFormula={Project Code}="${projectCode}"`
     const res = await fetch(url, {
         headers: {
             Authorization: `Bearer ${process.env.AIRTABLE_API_KEY}`,
@@ -46,24 +46,24 @@ export default async function JHWPage() {
     if (!f) return <div style={{ padding: 48, fontFamily: "system-ui" }}>Project data not found.</div>
 
     const project = {
-        clientName:        f[FIELDS.clientName] ?? "",
-        location:          f[FIELDS.location] ?? "",
-        modelName:         f[FIELDS.modelName] ?? "",
-        squareFootage:     f[FIELDS.squareFootage] ?? "",
-        roofStyle:         f[FIELDS.roofStyle] ?? "",
-        proposalDate:      f[FIELDS.proposalDate] ?? "",
-        designPlanningFee: f[FIELDS.designPlanningFee] ?? "",
-        kitPrice:          f[FIELDS.kitPrice] ?? "",
-        kitSubtotal:       f[FIELDS.kitSubtotal] ?? "",
-        construction:      f[FIELDS.construction] ?? "",
-        siteWork:          f[FIELDS.siteWork] ?? "",
-        consulting:        f[FIELDS.consulting] ?? "",
-        variableSubtotal:  f[FIELDS.variableSubtotal] ?? "",
-        totalCost:         f[FIELDS.totalCost] ?? "",
-        phase1Fee:         f[FIELDS.phase1Fee] ?? "",
-        phase2Fee:         f[FIELDS.phase2Fee] ?? "",
-        evergreen1:        f[FIELDS.evergreen1] ?? "",
-        evergreen2:        f[FIELDS.evergreen2] ?? "",
+        clientName:        f["Client Name"] ?? "",
+        location:          f["Location"] ?? "",
+        modelName:         f["Model Name"] ?? "",
+        squareFootage:     f["Square Footage"] ?? "",
+        roofStyle:         f["Roof Style"] ?? "",
+        proposalDate:      f["Proposal Date"] ?? "",
+        designPlanningFee: f["Design Planning Fee"] ?? "",
+        kitPrice:          f["Kit Price"] ?? "",
+        kitSubtotal:       f["Kit Subtotal"] ?? "",
+        construction:      f["Construction"] ?? "",
+        siteWork:          f["Site Work"] ?? "",
+        consulting:        f["Consulting"] ?? "",
+        variableSubtotal:  f["Variable Subtotal"] ?? "",
+        totalCost:         f["Total Cost"] ?? "",
+        phase1Fee:         f["Phase1 Fee"] ?? "",
+        phase2Fee:         f["Phase2 Fee"] ?? "",
+        evergreen1:        f["Evergreen1"] ?? "",
+        evergreen2:        f["Evergreen2"] ?? "",
     }
 
     return (
