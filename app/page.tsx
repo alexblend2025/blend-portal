@@ -1,69 +1,229 @@
-import Image from "next/image";
+import { currentUser } from "@clerk/nextjs/server"
+import { redirect } from "next/navigation"
+import Link from "next/link"
 
-export default function Home() {
-  return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+const BASE_ID = "appBYDH5PMbXLdaSk"
+const TABLE_ID = "tblXlavYH0jNSAFOc"
+
+async function getAllProjects() {
+    const url = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}`
+    const res = await fetch(url, {
+        headers: {
+            Authorization: `Bearer ${process.env.AIRTABLE_API_KEY}`,
+        },
+        next: { revalidate: 60 },
+    })
+    const data = await res.json()
+    if (!data.records) return []
+    return data.records.map((r: any) => ({
+        id: r.id,
+        projectCode:   r.fields["Project Code"] ?? "",
+        clientName:    r.fields["Client Name"] ?? "",
+        location:      r.fields["Location"] ?? "",
+        modelName:     r.fields["Model Name"] ?? "",
+        description:   r.fields["Description"] ?? "",
+        status:        r.fields["Status"] ?? "",
+        allowedEmails: r.fields["Allowed Emails"] ?? "",
+    }))
+}
+
+export default async function HomePage() {
+    const user = await currentUser()
+    if (!user) redirect("/sign-in")
+
+    const userEmail = user.emailAddresses[0].emailAddress.toLowerCase()
+    const allProjects = await getAllProjects()
+
+    const accessibleProjects = allProjects.filter((p: any) => {
+        const emails = p.allowedEmails
+            .split(",")
+            .map((e: string) => e.trim().toLowerCase())
+        return emails.includes(userEmail)
+    })
+
+    return (
+        <div style={{
+            minHeight: "100vh",
+            background: "#ffffff",
+            fontFamily: "system-ui, -apple-system, sans-serif",
+            color: "#1C1C1A",
+        }}>
+            <div style={{
+                background: "#1C1C1A",
+                padding: "0 48px",
+                height: 52,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+            }}>
+                <span style={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    letterSpacing: "0.18em",
+                    textTransform: "uppercase",
+                    color: "#B8986A",
+                }}>
+                    BLEND PROJECTS
+                </span>
+                <span style={{
+                    fontSize: 11,
+                    color: "#888880",
+                    letterSpacing: "0.06em",
+                }}>
+                    {userEmail}
+                </span>
+            </div>
+
+            <div style={{
+                maxWidth: 860,
+                margin: "0 auto",
+                padding: "64px 48px 96px",
+            }}>
+                <div style={{
+                    borderBottom: "1px solid #E5E5E5",
+                    paddingBottom: 32,
+                    marginBottom: 48,
+                }}>
+                    <div style={{
+                        fontSize: 10,
+                        fontWeight: 600,
+                        letterSpacing: "0.2em",
+                        textTransform: "uppercase",
+                        color: "#888880",
+                        marginBottom: 12,
+                    }}>
+                        Client Portal
+                    </div>
+                    <h1 style={{
+                        fontSize: 36,
+                        fontWeight: 300,
+                        letterSpacing: "-0.03em",
+                        color: "#1C1C1A",
+                        marginBottom: 8,
+                        lineHeight: 1.1,
+                    }}>
+                        Your Projects
+                    </h1>
+                    <p style={{
+                        fontSize: 14,
+                        color: "#888880",
+                        margin: 0,
+                    }}>
+                        Welcome{user.firstName ? `, ${user.firstName}` : ""}. Select a project below to view your proposal and journey.
+                    </p>
+                </div>
+
+                {accessibleProjects.length === 0 ? (
+                    <div style={{
+                        padding: "48px 0",
+                        textAlign: "center",
+                        fontSize: 14,
+                        color: "#888880",
+                    }}>
+                        No projects found for your account. Contact your Blend project manager if you think this is an error.
+                    </div>
+                ) : (
+                    <div style={{ display: "grid", gap: 16 }}>
+                        {accessibleProjects.map((p: any) => (
+                            <Link
+                                key={p.id}
+                                href={`/project/${p.projectCode.toLowerCase()}`}
+                                style={{ textDecoration: "none" }}
+                            >
+                                <div style={{
+                                    border: "1px solid #E5E5E5",
+                                    borderRadius: 8,
+                                    padding: "28px 32px",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "space-between",
+                                    gap: 24,
+                                    cursor: "pointer",
+                                }}>
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 12,
+                                            marginBottom: 8,
+                                        }}>
+                                            <div style={{
+                                                fontSize: 10,
+                                                fontWeight: 600,
+                                                letterSpacing: "0.14em",
+                                                textTransform: "uppercase",
+                                                color: "#ffffff",
+                                                background: "#1C1C1A",
+                                                padding: "3px 8px",
+                                                borderRadius: 2,
+                                            }}>
+                                                {p.projectCode}
+                                            </div>
+                                            {p.status && (
+                                                <div style={{
+                                                    fontSize: 10,
+                                                    fontWeight: 600,
+                                                    letterSpacing: "0.12em",
+                                                    textTransform: "uppercase",
+                                                    color: "#B8986A",
+                                                    border: "1px solid #B8986A",
+                                                    padding: "3px 8px",
+                                                    borderRadius: 2,
+                                                }}>
+                                                    {p.status}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div style={{
+                                            fontSize: 20,
+                                            fontWeight: 400,
+                                            color: "#1C1C1A",
+                                            marginBottom: 4,
+                                        }}>
+                                            {p.modelName}
+                                        </div>
+                                        <div style={{
+                                            fontSize: 13,
+                                            color: "#888880",
+                                        }}>
+                                            {p.clientName} · {p.location}
+                                        </div>
+                                        {p.description && (
+                                            <div style={{
+                                                fontSize: 12,
+                                                color: "#888880",
+                                                marginTop: 8,
+                                            }}>
+                                                {p.description}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div style={{
+                                        fontSize: 20,
+                                        color: "#888880",
+                                        flexShrink: 0,
+                                    }}>
+                                        →
+                                    </div>
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
+                )}
+
+                <div style={{
+                    marginTop: 64,
+                    paddingTop: 20,
+                    borderTop: "1px solid #E5E5E5",
+                    fontSize: 11,
+                    color: "#888880",
+                    display: "flex",
+                    justifyContent: "space-between",
+                }}>
+                    <span>Blend Projects Inc.</span>
+                    <span>blendprojects.co</span>
+                </div>
+            </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
-  );
+    )
 }
