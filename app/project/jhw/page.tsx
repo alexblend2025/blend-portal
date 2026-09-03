@@ -58,6 +58,7 @@ export default async function JHWPage() {
         phase2Fee:         f["Phase2 Fee"] ?? "",
         evergreen1:        f["Evergreen1"] ?? "",
         evergreen2:        f["Evergreen2"] ?? "",
+        contractLink:      f["Contract Link"] ?? "",
     }
 
     return (
