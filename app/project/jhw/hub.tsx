@@ -290,7 +290,7 @@ function ProposalSection({ project }: any) {
                     <div style={{ fontSize: 16, fontWeight: 400, color: "#fff", marginBottom: 4 }}>Ready to move forward?</div>
                     <div style={{ fontSize: 13, color: C.inkMuted }}>Review and sign the proposal agreement below.</div>
                 </div>
-                <a href="#pandadoc" style={{ display: "inline-block", background: C.gold, color: "#fff", fontSize: 12, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", padding: "14px 28px", borderRadius: 4, textDecoration: "none" }}>
+                <a href={project.contractLink || "#"} target="_blank" rel="noreferrer" style={{display: "inline-block", background: C.gold, color: "#fff", fontSize: 12, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", padding: "14px 28px", borderRadius: 4, textDecoration: "none" }}>
                     Review & Sign →
                 </a>
             </div>
