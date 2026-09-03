@@ -1,11 +1,69 @@
 import { currentUser } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
 
+const BASE_ID = "appBYDH5PMbXLdaSk"
+const TABLE_ID = "tblXlavYH0jNSAFOc"
+const FIELDS = {
+    projectCode:       "fldJVp47jfkxWuavz",
+    clientName:        "fld3jQyPbWrj6oUAa",
+    location:          "fld09xLDf0Xd4M5Cb",
+    modelName:         "fldbMyMWkIBiQKPZB",
+    squareFootage:     "fld3h28UqOp6HM5df",
+    roofStyle:         "fldSPej8GSjeIZMWD",
+    proposalDate:      "fldrPiEVSzqyhBs8t",
+    designPlanningFee: "fldkzPwwOqy51u057",
+    kitPrice:          "fldyoPKGu3y8FjW12",
+    kitSubtotal:       "fld16YKJkvaUSxytQ",
+    construction:      "fldhePKT5o1Zci1fB",
+    siteWork:          "fld82YkgBkD5zes5c",
+    consulting:        "fldGYzMHnpdtXj00H",
+    variableSubtotal:  "fldmoeYVKjSKhRnPD",
+    totalCost:         "fld0mGhCl9Mduf1HK",
+    phase1Fee:         "fld7R0W3hRsKN4pqo",
+    phase2Fee:         "fldyJpgHbIZI4FdYg",
+    evergreen1:        "fldCVN71k79PH26m8",
+    evergreen2:        "fldbbZl9Y3OXbpvEV",
+}
+
+async function getProjectData(projectCode: string) {
+    const url = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}?filterByFormula={${FIELDS.projectCode}}="${projectCode}"`
+    const res = await fetch(url, {
+        headers: {
+            Authorization: `Bearer ${process.env.AIRTABLE_API_KEY}`,
+        },
+        next: { revalidate: 60 },
+    })
+    const data = await res.json()
+    if (!data.records || data.records.length === 0) return null
+    return data.records[0].fields
+}
+
 export default async function JHWPage() {
     const user = await currentUser()
+    if (!user) redirect("/sign-in")
 
-    if (!user) {
-        redirect("/sign-in")
+    const f = await getProjectData("JHW")
+    if (!f) return <div style={{ padding: 48, fontFamily: "system-ui" }}>Project data not found.</div>
+
+    const project = {
+        clientName:        f[FIELDS.clientName] ?? "",
+        location:          f[FIELDS.location] ?? "",
+        modelName:         f[FIELDS.modelName] ?? "",
+        squareFootage:     f[FIELDS.squareFootage] ?? "",
+        roofStyle:         f[FIELDS.roofStyle] ?? "",
+        proposalDate:      f[FIELDS.proposalDate] ?? "",
+        designPlanningFee: f[FIELDS.designPlanningFee] ?? "",
+        kitPrice:          f[FIELDS.kitPrice] ?? "",
+        kitSubtotal:       f[FIELDS.kitSubtotal] ?? "",
+        construction:      f[FIELDS.construction] ?? "",
+        siteWork:          f[FIELDS.siteWork] ?? "",
+        consulting:        f[FIELDS.consulting] ?? "",
+        variableSubtotal:  f[FIELDS.variableSubtotal] ?? "",
+        totalCost:         f[FIELDS.totalCost] ?? "",
+        phase1Fee:         f[FIELDS.phase1Fee] ?? "",
+        phase2Fee:         f[FIELDS.phase2Fee] ?? "",
+        evergreen1:        f[FIELDS.evergreen1] ?? "",
+        evergreen2:        f[FIELDS.evergreen2] ?? "",
     }
 
     return (
@@ -62,7 +120,7 @@ export default async function JHWPage() {
                         color: "#888880",
                         marginBottom: 16,
                     }}>
-                        Project Proposal · August 23, 2026
+                        Project Proposal · {project.proposalDate}
                     </div>
                     <h1 style={{
                         fontSize: 42,
@@ -72,7 +130,7 @@ export default async function JHWPage() {
                         marginBottom: 8,
                         lineHeight: 1.1,
                     }}>
-                        The 1200
+                        {project.modelName}
                     </h1>
                     <div style={{
                         fontSize: 16,
@@ -80,7 +138,7 @@ export default async function JHWPage() {
                         fontWeight: 400,
                         marginBottom: 24,
                     }}>
-                        Morné Van Antwerp · Halifax, NS
+                        {project.clientName} · {project.location}
                     </div>
                     <div style={{
                         display: "inline-block",
@@ -93,7 +151,7 @@ export default async function JHWPage() {
                         padding: "6px 14px",
                         borderRadius: 2,
                     }}>
-                        1,255 sq ft · Craft Gable
+                        {project.squareFootage} sq ft · {project.roofStyle}
                     </div>
                 </div>
 
@@ -124,8 +182,8 @@ export default async function JHWPage() {
                         Kit Costs
                     </div>
                     {[
-                        ["Design and Planning", "$50,000"],
-                        ["Blend Kit", "$280,354"],
+                        ["Design and Planning", project.designPlanningFee],
+                        ["Blend Kit", project.kitPrice],
                     ].map(([label, value]) => (
                         <div key={label} style={{
                             display: "flex",
@@ -146,10 +204,9 @@ export default async function JHWPage() {
                         borderBottom: "2px solid #1C1C1A",
                         fontSize: 14,
                         fontWeight: 600,
-                        color: "#1C1C1A",
                     }}>
                         <span>Kit Sub-total</span>
-                        <span>$330,354</span>
+                        <span>{project.kitSubtotal}</span>
                     </div>
 
                     {/* Variable costs */}
@@ -167,9 +224,9 @@ export default async function JHWPage() {
                         Estimated Variable Costs
                     </div>
                     {[
-                        ["Construction", "$338,393"],
-                        ["Site Work and Foundation", "$115,359"],
-                        ["Consulting and Soft Costs", "$33,437"],
+                        ["Construction", project.construction],
+                        ["Site Work and Foundation", project.siteWork],
+                        ["Consulting and Soft Costs", project.consulting],
                     ].map(([label, value]) => (
                         <div key={label} style={{
                             display: "flex",
@@ -190,10 +247,9 @@ export default async function JHWPage() {
                         borderBottom: "2px solid #1C1C1A",
                         fontSize: 14,
                         fontWeight: 600,
-                        color: "#1C1C1A",
                     }}>
                         <span>Variable Sub-total</span>
-                        <span>$487,189</span>
+                        <span>{project.variableSubtotal}</span>
                     </div>
 
                     {/* Total */}
@@ -203,14 +259,12 @@ export default async function JHWPage() {
                         padding: "20px 0",
                         fontSize: 18,
                         fontWeight: 600,
-                        color: "#1C1C1A",
                         borderBottom: "2px solid #1C1C1A",
                     }}>
                         <span>Total Estimated Cost</span>
-                        <span>$817,544</span>
+                        <span>{project.totalCost}</span>
                     </div>
 
-                    {/* Disclaimer */}
                     <div style={{
                         marginTop: 16,
                         fontSize: 12,
@@ -240,7 +294,7 @@ export default async function JHWPage() {
                             title: "Initial Design & Planning",
                             agreement: "Design & Planning Agreement",
                             timing: "6 to 8 weeks",
-                            fee: "$35,000 due at signing",
+                            fee: project.phase1Fee,
                             gate: "Design Approval — floor plans, elevations, and preliminary estimate.",
                             includes: [
                                 "Concept design and bylaw review",
@@ -255,7 +309,7 @@ export default async function JHWPage() {
                             title: "Pre-Construction & Detailed Design",
                             agreement: "Pre-Construction Agreement",
                             timing: "8 to 12 weeks",
-                            fee: "$15,000 D&P Phase 2 + $40,000 Evergreen #1 (third-party costs)",
+                            fee: `${project.phase2Fee} + ${project.evergreen1} Evergreen #1 (third-party costs)`,
                             gate: "Detailed Scope & Cost Approval — fully developed design, specifications, and detailed estimate.",
                             includes: [
                                 "Interior design and millwork drawings",
@@ -270,7 +324,7 @@ export default async function JHWPage() {
                             title: "Permitting & Construction Authorization",
                             agreement: "Construction Agreement / Kit Agreement",
                             timing: "Month 4 to 6 onwards",
-                            fee: "$60,000 Evergreen #2 — materials, manufacturing, and mobilization",
+                            fee: `${project.evergreen2} Evergreen #2 — materials, manufacturing, and mobilization`,
                             gate: null,
                             includes: [
                                 "Permit package submission",
@@ -285,11 +339,7 @@ export default async function JHWPage() {
                             paddingBottom: 32,
                             borderBottom: "1px solid #E5E5E5",
                         }}>
-                            <div style={{
-                                display: "flex",
-                                gap: 24,
-                                alignItems: "flex-start",
-                            }}>
+                            <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
                                 <div style={{
                                     width: 36,
                                     height: 36,
@@ -308,63 +358,24 @@ export default async function JHWPage() {
                                     {p.phase}
                                 </div>
                                 <div style={{ flex: 1 }}>
-                                    <div style={{
-                                        fontSize: 17,
-                                        fontWeight: 500,
-                                        color: "#1C1C1A",
-                                        marginBottom: 4,
-                                    }}>
-                                        {p.title}
-                                    </div>
-                                    <div style={{
-                                        fontSize: 12,
-                                        color: "#888880",
-                                        marginBottom: 16,
-                                        display: "flex",
-                                        gap: 24,
-                                        flexWrap: "wrap",
-                                    }}>
+                                    <div style={{ fontSize: 17, fontWeight: 500, marginBottom: 4 }}>{p.title}</div>
+                                    <div style={{ fontSize: 12, color: "#888880", marginBottom: 16, display: "flex", gap: 24, flexWrap: "wrap" }}>
                                         <span><b style={{ color: "#1C1C1A", fontWeight: 500 }}>Agreement:</b> {p.agreement}</span>
                                         <span><b style={{ color: "#1C1C1A", fontWeight: 500 }}>Timing:</b> {p.timing}</span>
                                     </div>
-                                    <div style={{
-                                        fontSize: 12,
-                                        color: "#888880",
-                                        marginBottom: 16,
-                                    }}>
+                                    <div style={{ fontSize: 12, color: "#888880", marginBottom: 16 }}>
                                         <b style={{ color: "#1C1C1A", fontWeight: 500 }}>Fee:</b> {p.fee}
                                     </div>
-                                    <ul style={{
-                                        listStyle: "none",
-                                        padding: 0,
-                                        margin: "0 0 16px 0",
-                                    }}>
+                                    <ul style={{ listStyle: "none", padding: 0, margin: "0 0 16px 0" }}>
                                         {p.includes.map((item) => (
-                                            <li key={item} style={{
-                                                fontSize: 13,
-                                                color: "#4A4A46",
-                                                padding: "4px 0 4px 16px",
-                                                position: "relative",
-                                                lineHeight: 1.5,
-                                            }}>
-                                                <span style={{
-                                                    position: "absolute",
-                                                    left: 0,
-                                                    color: "#B8986A",
-                                                }}>→</span>
+                                            <li key={item} style={{ fontSize: 13, color: "#4A4A46", padding: "4px 0 4px 16px", position: "relative", lineHeight: 1.5 }}>
+                                                <span style={{ position: "absolute", left: 0, color: "#B8986A" }}>→</span>
                                                 {item}
                                             </li>
                                         ))}
                                     </ul>
                                     {p.gate && (
-                                        <div style={{
-                                            background: "#F8F8F8",
-                                            border: "1px solid #E5E5E5",
-                                            borderRadius: 4,
-                                            padding: "10px 14px",
-                                            fontSize: 12,
-                                            color: "#4A4A46",
-                                        }}>
+                                        <div style={{ background: "#F8F8F8", border: "1px solid #E5E5E5", borderRadius: 4, padding: "10px 14px", fontSize: 12, color: "#4A4A46" }}>
                                             <b style={{ color: "#1C1C1A" }}>Decision Gate:</b> {p.gate}
                                         </div>
                                     )}
@@ -386,36 +397,21 @@ export default async function JHWPage() {
                     gap: 24,
                 }}>
                     <div>
-                        <div style={{
-                            fontSize: 16,
-                            fontWeight: 400,
-                            color: "#ffffff",
-                            marginBottom: 4,
-                        }}>
-                            Ready to move forward?
-                        </div>
-                        <div style={{
-                            fontSize: 13,
-                            color: "#888880",
-                        }}>
-                            Review and sign the proposal agreement below.
-                        </div>
+                        <div style={{ fontSize: 16, fontWeight: 400, color: "#ffffff", marginBottom: 4 }}>Ready to move forward?</div>
+                        <div style={{ fontSize: 13, color: "#888880" }}>Review and sign the proposal agreement below.</div>
                     </div>
-                    <a
-                        href="#pandadoc"
-                        style={{
-                            display: "inline-block",
-                            background: "#B8986A",
-                            color: "#ffffff",
-                            fontSize: 12,
-                            fontWeight: 600,
-                            letterSpacing: "0.1em",
-                            textTransform: "uppercase",
-                            padding: "14px 28px",
-                            borderRadius: 4,
-                            textDecoration: "none",
-                        }}
-                    >
+                    <a href="#pandadoc" style={{
+                        display: "inline-block",
+                        background: "#B8986A",
+                        color: "#ffffff",
+                        fontSize: 12,
+                        fontWeight: 600,
+                        letterSpacing: "0.1em",
+                        textTransform: "uppercase",
+                        padding: "14px 28px",
+                        borderRadius: 4,
+                        textDecoration: "none",
+                    }}>
                         Review & Sign →
                     </a>
                 </div>
@@ -431,7 +427,7 @@ export default async function JHWPage() {
                     justifyContent: "space-between",
                 }}>
                     <span>Blend Projects Inc.</span>
-                    <span>JHW · The 1200 · Halifax, NS</span>
+                    <span>JHW · {project.modelName} · {project.location}</span>
                 </div>
             </div>
         </div>
