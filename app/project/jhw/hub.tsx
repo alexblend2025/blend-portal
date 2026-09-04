@@ -5,10 +5,11 @@ import Link from "next/link"
 
 const STAGES = [
     { id: "proposal", label: "Proposal", icon: "01" },
-    { id: "design-planning", label: "Design & Planning", icon: "02" },
-    { id: "lookbook", label: "Lookbook", icon: "03" },
+    { id: "lookbook", label: "Lookbook", icon: "02" },
+    { id: "design-planning", label: "Design & Planning", icon: "03" },
     { id: "pre-construction", label: "Pre-Construction", icon: "04" },
     { id: "construction", label: "Construction", icon: "05" },
+    { id: "warranty", label: "Warranty", icon: "06" },
 ]
 
 const C = {
@@ -253,6 +254,7 @@ export default function JHWHub({ project, userEmail, activeStages, projectCode, 
             case "proposal": return <ProposalContent project={project} />
             case "design-planning": return <DesignPlanningContent />
             case "lookbook": return <LookbookContent />
+            case "warranty": return <WarrantyContent />
             default: return <LockedContent label={id} />
         }
     }
