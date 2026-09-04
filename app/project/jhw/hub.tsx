@@ -237,6 +237,14 @@ function TeamContent() {
     )
 }
 
+function WarrantyContent() {
+    return (
+        <div style={{ padding: "32px 0 8px", fontSize: 14, color: C.inkMuted }}>
+            Warranty information will appear here.
+        </div>
+    )
+}
+
 interface JHWHubProps {
     project: any
     userEmail: string
