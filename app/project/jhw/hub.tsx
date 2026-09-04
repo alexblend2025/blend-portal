@@ -199,14 +199,6 @@ function ProposalContent({ project }: { project: any }) {
     )
 }
 
-function DesignPlanningContent() {
-    return (
-        <div style={{ padding: "32px 0 8px", textAlign: "center" as const, color: C.inkMuted }}>
-            <div style={{ fontSize: 14 }}>Your Design & Planning journey will appear here once this phase is activated.</div>
-        </div>
-    )
-}
-
 function LookbookContent() {
     return (
         <div style={{ padding: "32px 0 8px" }}>
