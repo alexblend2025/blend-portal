@@ -458,7 +458,7 @@ export function DesignPlanningContent({ webhookGet, webhookSave, projectCode }: 
         fetch(webhookSave, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ code: projectCode, checkboxes: JSON.stringify(c), notes: JSON.stringify(n), generalNotes: gn }),,
+            body: JSON.stringify({ code: projectCode, checkboxes: JSON.stringify(c), notes: JSON.stringify(n), generalNotes: gn }),
         })
             .then((r) => { if (r.ok) setSaveStatus("saved"); else setSaveStatus("error") })
             .catch(() => setSaveStatus("error"))
