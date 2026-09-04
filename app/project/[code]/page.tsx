@@ -1,12 +1,12 @@
 import { currentUser } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
-import JHWHub from "./hub"
+import ProjectHub from "../../components/ProjectHub/hub"
 
 const BASE_ID = "appBYDH5PMbXLdaSk"
 const TABLE_ID = "tblXlavYH0jNSAFOc"
 
 async function getProjectData(projectCode: string) {
-    const url = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}?filterByFormula={Project Code}="${projectCode}"`
+    const url = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}?filterByFormula={Project Code}="${projectCode.toUpperCase()}"`
     const res = await fetch(url, {
         headers: { Authorization: `Bearer ${process.env.AIRTABLE_API_KEY}` },
         next: { revalidate: 60 },
@@ -16,15 +16,16 @@ async function getProjectData(projectCode: string) {
     return data.records[0].fields
 }
 
-export default async function JHWPage() {
+export default async function ProjectPage({ params }: { params: Promise<{ code: string }> }) {
+    const { code } = await params
     const user = await currentUser()
     if (!user) redirect("/sign-in")
 
     const userEmail = user.emailAddresses[0].emailAddress.toLowerCase()
-    const f = await getProjectData("JHW")
+    const f = await getProjectData(code)
 
     if (!f) return (
-        <div style={{ padding: 48, fontFamily: "system-ui" }}>Project data not found.</div>
+        <div style={{ padding: 48, fontFamily: "system-ui" }}>Project not found.</div>
     )
 
     const allowedEmails = (f["Allowed Emails"] ?? "")
@@ -35,7 +36,7 @@ export default async function JHWPage() {
 
     const activeStages = (f["Active Stages"] ?? "")
         .split(",")
-        .map((s: string) => s.trim().toLowerCase().replace(/\s+/g, "-"))
+        .map((s: string) => s.trim().toLowerCase().replace(/\s+/g, "-").replace(/-+/g, "-"))
 
     const project = {
         clientName:        f["Client Name"] ?? "",
@@ -60,11 +61,11 @@ export default async function JHWPage() {
     }
 
     return (
-        <JHWHub
+        <ProjectHub
             project={project}
             userEmail={userEmail}
             activeStages={activeStages}
-            projectCode="JHW"
+            projectCode={code.toUpperCase()}
             modelName={project.modelName}
         />
     )
