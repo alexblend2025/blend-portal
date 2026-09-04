@@ -270,8 +270,8 @@ export default function JHWHub({ project, userEmail, activeStages, projectCode, 
     const renderContent = (id: string) => {
         switch (id) {
             case "proposal": return <ProposalContent project={project} />
-            case "team": return <DPTeamContent webhookTeamGet="https://alexpym.app.n8n.cloud/webhook/dp-gik-team-get" />
-            case "design-planning": return <DesignPlanningContent webhookGet="https://alexpym.app.n8n.cloud/webhook/dp-gik-get" webhookSave="https://alexpym.app.n8n.cloud/webhook/dp-gik-save" />
+            case "team": return <DPTeamContent webhookTeamGet={`https://alexpym.app.n8n.cloud/webhook/portal-team-get?code=${projectCode}`} />
+            case "design-planning": return <DesignPlanningContent webhookGet={`https://alexpym.app.n8n.cloud/webhook/portal-dp-get?code=${projectCode}`} webhookSave="https://alexpym.app.n8n.cloud/webhook/portal-dp-save" projectCode={projectCode} />
             case "lookbook": return <LookbookContent />
             case "pre-construction": return <LockedContent label="pre-construction" />
             case "construction": return <LockedContent label="construction" />
