@@ -308,7 +308,7 @@ export default function JHWHub({ project, userEmail, activeStages, projectCode, 
 
                 {/* Accordion stages */}
                 <div style={{ display: "grid", gap: 8 }}>
-                    {STAGES.map((stage, idx) => {
+                {STAGES.filter((stage) => stage.id !== "proposal" || activeStages.includes("proposal")).map((stage, idx) => {
                         const isActive = activeStages.includes(stage.id)
                         const isOpen = openStages.includes(stage.id)
 
