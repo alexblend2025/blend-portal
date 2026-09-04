@@ -427,7 +427,7 @@ function CallCard({ call, checked, note, open, onToggle, onCheck, onNote, progre
     )
 }
 
-export function DesignPlanningContent({ webhookGet, webhookSave }: { webhookGet: string; webhookSave: string }) {
+export function DesignPlanningContent({ webhookGet, webhookSave, projectCode }: { webhookGet: string; webhookSave: string; projectCode: string }) {
     const [checked, setChecked] = useState<Record<string, boolean>>({})
     const [notes, setNotes] = useState<Record<string, string>>({})
     const [generalNotes, setGeneralNotes] = useState("")
@@ -458,7 +458,7 @@ export function DesignPlanningContent({ webhookGet, webhookSave }: { webhookGet:
         fetch(webhookSave, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ checkboxes: JSON.stringify(c), notes: JSON.stringify(n), generalNotes: gn }),
+            body: JSON.stringify({ code: projectCode, checkboxes: JSON.stringify(c), notes: JSON.stringify(n), generalNotes: gn }),,
         })
             .then((r) => { if (r.ok) setSaveStatus("saved"); else setSaveStatus("error") })
             .catch(() => setSaveStatus("error"))
