@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { DesignPlanningContent, TeamContent as DPTeamContent } from "./dp-content"
 
 const STAGES = [
     { id: "proposal", label: "Proposal", icon: "01" },
@@ -229,18 +230,26 @@ function LockedContent({ label }: { label: string }) {
     )
 }
 
-function TeamContent() {
-    return (
-        <div style={{ padding: "32px 0 8px", fontSize: 14, color: C.inkMuted }}>
-            Your Blend team will appear here.
-        </div>
-    )
-}
-
 function WarrantyContent() {
     return (
         <div style={{ padding: "32px 0 8px", fontSize: 14, color: C.inkMuted }}>
             Warranty information will appear here.
+        </div>
+    )
+}
+
+function PreConstructionContent() {
+    return (
+        <div style={{ padding: "32px 0 8px", fontSize: 14, color: C.inkMuted }}>
+            Pre-Construction details will appear here.
+        </div>
+    )
+}
+
+function ConstructionContent() {
+    return (
+        <div style={{ padding: "32px 0 8px", fontSize: 14, color: C.inkMuted }}>
+            Construction details will appear here.
         </div>
     )
 }
@@ -269,11 +278,13 @@ export default function JHWHub({ project, userEmail, activeStages, projectCode, 
     const renderContent = (id: string) => {
         switch (id) {
             case "proposal": return <ProposalContent project={project} />
-            case "design-planning": return <DesignPlanningContent />
+            case "team": return <DPTeamContent webhookTeamGet="https://alexpym.app.n8n.cloud/webhook/dp-gik-team-get" />
+            case "design-planning": return <DesignPlanningContent webhookGet="https://alexpym.app.n8n.cloud/webhook/dp-gik-get" webhookSave="https://alexpym.app.n8n.cloud/webhook/dp-gik-save" />
             case "lookbook": return <LookbookContent />
-            case "team": return <TeamContent />
+            case "pre-construction": return <LockedContent label="pre-construction" />
+            case "construction": return <LockedContent label="construction" />
             case "warranty": return <WarrantyContent />
-            default: return <LockedContent label={id} />
+            default: return null
         }
     }
 
