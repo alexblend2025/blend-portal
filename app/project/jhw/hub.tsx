@@ -207,7 +207,7 @@ function LookbookContent() {
             <p style={{ fontSize: 14, color: C.inkMuted, lineHeight: 1.6, marginBottom: 28 }}>
                 The Lookbook is where you share your style, preferences, and inspiration with the Blend team. It takes about 15 minutes and helps us design a home that feels like yours.
             </p>
-            <a href="https://forms.google.com" target="_blank" rel="noreferrer" style={{ display: "inline-block", background: C.ink, color: "#fff", fontSize: 12, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase" as const, padding: "14px 28px", borderRadius: 4, textDecoration: "none" }}>
+            <a href="https://forms.gle/ZGbdwMhkG5evsYUS8" target="_blank" rel="noreferrer" style={{ display: "inline-block", background: C.ink, color: "#fff", fontSize: 12, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase" as const, padding: "14px 28px", borderRadius: 4, textDecoration: "none" }}>
                 Open Lookbook →
             </a>
         </div>
