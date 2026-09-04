@@ -27,14 +27,12 @@ export default async function JHWPage() {
         <div style={{ padding: 48, fontFamily: "system-ui" }}>Project data not found.</div>
     )
 
-    // Check access
     const allowedEmails = (f["Allowed Emails"] ?? "")
         .split(",")
         .map((e: string) => e.trim().toLowerCase())
 
     if (!allowedEmails.includes(userEmail)) redirect("/")
 
-    // Parse active stages
     const activeStages = (f["Active Stages"] ?? "")
         .split(",")
         .map((s: string) => s.trim().toLowerCase().replace(/\s+/g, "-"))
@@ -66,6 +64,8 @@ export default async function JHWPage() {
             project={project}
             userEmail={userEmail}
             activeStages={activeStages}
+            projectCode="JHW"
+            modelName={project.modelName}
         />
     )
 }
