@@ -3,6 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { DesignPlanningContent, TeamContent as DPTeamContent } from "./dp-content"
+import { SignOutButton } from "@clerk/nextjs"
 
 const STAGES = [
     { id: "proposal", label: "Proposal", icon: "01" },
@@ -284,14 +285,24 @@ export default function JHWHub({ project, userEmail, activeStages, projectCode, 
         <div style={{ minHeight: "100vh", background: C.white, fontFamily: "system-ui, -apple-system, sans-serif", color: C.ink }}>
             {/* Top nav */}
             <div style={{ background: C.ink, padding: "0 32px", height: 56, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}>
-                <Link href="/">
-                    <img src="/logo-white.png" alt="Blend Projects" style={{ height: 32, width: "auto", display: "block", cursor: "pointer" }} />
-                </Link>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <Link href="/">
+                        <img src="/logo-white.png" alt="Blend Projects" style={{ height: 32, width: "auto", display: "block", cursor: "pointer" }} />
+                    </Link>
+                    <Link href="/" style={{ fontSize: 11, color: "#888880", textDecoration: "none", letterSpacing: "0.08em", textTransform: "uppercase" as const }}>
+                        ← Portal
+                    </Link>
+                </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
                     <div style={{ textAlign: "right" as const }}>
                         <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: C.gold }}>{projectCode}</div>
                         <div style={{ fontSize: 11, color: C.inkMuted }}>{modelName}</div>
                     </div>
+                    <SignOutButton redirectUrl="/">
+                        <button style={{ fontSize: 11, color: "#888880", background: "none", border: "none", cursor: "pointer", letterSpacing: "0.08em", textTransform: "uppercase" as const, padding: 0 }}>
+                            Sign out
+                        </button>
+                    </SignOutButton>
                 </div>
             </div>
 
