@@ -5,11 +5,12 @@ import Link from "next/link"
 
 const STAGES = [
     { id: "proposal", label: "Proposal", icon: "01" },
-    { id: "lookbook", label: "Lookbook", icon: "02" },
-    { id: "design-planning", label: "Design & Planning", icon: "03" },
-    { id: "pre-construction", label: "Pre-Construction", icon: "04" },
-    { id: "construction", label: "Construction", icon: "05" },
-    { id: "warranty", label: "Warranty", icon: "06" },
+    { id: "team", label: "Team", icon: "02" },
+    { id: "lookbook", label: "Lookbook", icon: "03" },
+    { id: "design-planning", label: "Design & Planning", icon: "04" },
+    { id: "pre-construction", label: "Pre-Construction", icon: "05" },
+    { id: "construction", label: "Construction", icon: "06" },
+    { id: "warranty", label: "Warranty", icon: "07" },
 ]
 
 const C = {
@@ -228,6 +229,14 @@ function LockedContent({ label }: { label: string }) {
     )
 }
 
+function TeamContent() {
+    return (
+        <div style={{ padding: "32px 0 8px", fontSize: 14, color: C.inkMuted }}>
+            Your Blend team will appear here.
+        </div>
+    )
+}
+
 interface JHWHubProps {
     project: any
     userEmail: string
@@ -254,6 +263,7 @@ export default function JHWHub({ project, userEmail, activeStages, projectCode, 
             case "proposal": return <ProposalContent project={project} />
             case "design-planning": return <DesignPlanningContent />
             case "lookbook": return <LookbookContent />
+            case "team": return <TeamContent />
             case "warranty": return <WarrantyContent />
             default: return <LockedContent label={id} />
         }
