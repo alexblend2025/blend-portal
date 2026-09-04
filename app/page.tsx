@@ -1,6 +1,6 @@
 import { currentUser } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
-import Link from "next/link"
+import ProjectList from "./components/ProjectList"
 
 const BASE_ID = "appBYDH5PMbXLdaSk"
 const TABLE_ID = "tblXlavYH0jNSAFOc"
@@ -113,103 +113,7 @@ export default async function HomePage() {
                     </p>
                 </div>
 
-                {accessibleProjects.length === 0 ? (
-                    <div style={{
-                        padding: "48px 0",
-                        textAlign: "center",
-                        fontSize: 14,
-                        color: "#888880",
-                    }}>
-                        No projects found for your account. Contact your Blend project manager if you think this is an error.
-                    </div>
-                ) : (
-                    <div style={{ display: "grid", gap: 16 }}>
-                        {accessibleProjects.map((p: any) => (
-                            <Link
-                                key={p.id}
-                                href={`/project/${p.projectCode.toLowerCase()}`}
-                                style={{ textDecoration: "none" }}
-                            >
-                                <div style={{
-                                    border: "1px solid #E5E5E5",
-                                    borderRadius: 8,
-                                    padding: "28px 32px",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "space-between",
-                                    gap: 24,
-                                    cursor: "pointer",
-                                }}>
-                                    <div style={{ flex: 1 }}>
-                                        <div style={{
-                                            display: "flex",
-                                            alignItems: "center",
-                                            gap: 12,
-                                            marginBottom: 8,
-                                        }}>
-                                            <div style={{
-                                                fontSize: 10,
-                                                fontWeight: 600,
-                                                letterSpacing: "0.14em",
-                                                textTransform: "uppercase",
-                                                color: "#ffffff",
-                                                background: "#1C1C1A",
-                                                padding: "3px 8px",
-                                                borderRadius: 2,
-                                            }}>
-                                                {p.projectCode}
-                                            </div>
-                                            {p.status && (
-                                                <div style={{
-                                                    fontSize: 10,
-                                                    fontWeight: 600,
-                                                    letterSpacing: "0.12em",
-                                                    textTransform: "uppercase",
-                                                    color: "#B8986A",
-                                                    border: "1px solid #B8986A",
-                                                    padding: "3px 8px",
-                                                    borderRadius: 2,
-                                                }}>
-                                                    {p.status}
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div style={{
-                                            fontSize: 20,
-                                            fontWeight: 400,
-                                            color: "#1C1C1A",
-                                            marginBottom: 4,
-                                        }}>
-                                            {p.modelName}
-                                        </div>
-                                        <div style={{
-                                            fontSize: 13,
-                                            color: "#888880",
-                                        }}>
-                                            {p.clientName} · {p.location}
-                                        </div>
-                                        {p.description && (
-                                            <div style={{
-                                                fontSize: 12,
-                                                color: "#888880",
-                                                marginTop: 8,
-                                            }}>
-                                                {p.description}
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div style={{
-                                        fontSize: 20,
-                                        color: "#888880",
-                                        flexShrink: 0,
-                                    }}>
-                                        →
-                                    </div>
-                                </div>
-                            </Link>
-                        ))}
-                    </div>
-                )}
+                <ProjectList projects={accessibleProjects} />
 
                 <div style={{
                     marginTop: 64,
