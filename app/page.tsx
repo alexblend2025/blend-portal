@@ -1,5 +1,6 @@
 import { currentUser } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
+
 import ProjectList from "./components/ProjectList"
 
 const BASE_ID = "appBYDH5PMbXLdaSk"
@@ -27,12 +28,27 @@ async function getAllProjects() {
     }))
 }
 
+async function getToolboxUsers() {
+    const url = `https://api.airtable.com/v0/appBYDH5PMbXLdaSk/tblDUBuJuUpi00ZhQ?maxRecords=1`
+    const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${process.env.AIRTABLE_API_KEY}` },
+        next: { revalidate: 60 },
+    })
+    const data = await res.json()
+    if (!data.records || data.records.length === 0) return []
+    return (data.records[0].fields["Toolbox Users"] ?? "")
+        .split(",")
+        .map((e: string) => e.trim().toLowerCase())
+}
+
 export default async function HomePage() {
     const user = await currentUser()
     if (!user) redirect("/sign-in")
 
     const userEmail = user.emailAddresses[0].emailAddress.toLowerCase()
     const allProjects = await getAllProjects()
+    const toolboxUsers = await getToolboxUsers()
+    const canSeeToolbox = toolboxUsers.includes(userEmail)
 
     const accessibleProjects = allProjects.filter((p: any) => {
         const emails = p.allowedEmails
@@ -73,12 +89,52 @@ export default async function HomePage() {
                     {userEmail}
                 </span>
             </div>
-
+    
             <div style={{
                 maxWidth: 860,
                 margin: "0 auto",
                 padding: "64px 48px 96px",
             }}>
+                {canSeeToolbox && (
+                /* Blend Toolbox */
+                <div style={{ marginBottom: 48 }}>
+                    <div style={{
+                        fontSize: 10,
+                        fontWeight: 600,
+                        letterSpacing: "0.2em",
+                        textTransform: "uppercase",
+                        color: "#888880",
+                        marginBottom: 12,
+                    }}>
+                        Blend Toolbox
+                    </div>
+                    <a href="/estimator" style={{ textDecoration: "none" }}>
+                        <div style={{
+                            border: "1px solid #1C1C1A",
+                            borderRadius: 8,
+                            padding: "28px 32px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            background: "#1C1C1A",
+                            cursor: "pointer",
+                        }}>
+                            <div>
+                                <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: "#B8986A", marginBottom: 8 }}>
+                                    Internal Tool
+                                </div>
+                                <div style={{ fontSize: 20, fontWeight: 400, color: "#ffffff", marginBottom: 4 }}>
+                                    Project Estimator
+                                </div>
+                                <div style={{ fontSize: 13, color: "#888880" }}>
+                                    Generate E0–E5 estimates for new proposals
+                                </div>
+                            </div>
+                            <div style={{ fontSize: 20, color: "#888880", flexShrink: 0 }}>→</div>
+                        </div>
+                    </a>
+                </div>
+                )}
                 <div style={{
                     borderBottom: "1px solid #E5E5E5",
                     paddingBottom: 32,
@@ -112,9 +168,9 @@ export default async function HomePage() {
                         Welcome{user.firstName ? `, ${user.firstName}` : ""}. Select a project below to view your proposal and journey.
                     </p>
                 </div>
-
+    
                 <ProjectList projects={accessibleProjects} />
-
+    
                 <div style={{
                     marginTop: 64,
                     paddingTop: 20,
@@ -130,4 +186,4 @@ export default async function HomePage() {
             </div>
         </div>
     )
-}
+    }
