@@ -50,7 +50,7 @@ export default function EstimatorPage() {
     const [saving, setSaving] = useState(false)
     const [requesting, setRequesting] = useState(false)
     const [projectLocation, setProjectLocation] = useState("")
-    const [notes, setNotes] = useState("")
+    const [notes, setNotes] = useState("Variable costs are estimates and subject to change based on site conditions, local trade pricing, and final design. Kit pricing will be finalized once design is approved and engineering is complete.\n\nSite work and foundation assumes a level, readily accessible building site with standard soil conditions. Rock excavation, significant grade change, or extended servicing runs are not included.")
     const [projectCode, setProjectCode] = useState("")
 
     useEffect(() => {
