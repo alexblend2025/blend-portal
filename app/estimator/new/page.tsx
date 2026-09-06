@@ -37,6 +37,7 @@ export default function EstimatorPage() {
     const [showFloor, setShowFloor] = useState(false)
     const [isCustom, setIsCustom] = useState(false)
     const [customSqFt, setCustomSqFt] = useState("")
+    const [addOns, setAddOns] = useState<{name: string, price: number}[]>([])
 
     // Multipliers
     const [constructionMultiplier, setConstructionMultiplier] = useState(1.0)
@@ -137,13 +138,26 @@ export default function EstimatorPage() {
     const consultingCost = adjustedConsultingRate * baseSubtotal
 
     // Total
-    const total = baseSubtotal + siteWorksCost + consultingCost
+    const addOnsTotal = addOns.reduce((sum, a) => sum + a.price, 0)
+    const total = baseSubtotal + siteWorksCost + consultingCost + addOnsTotal
 
     // Variance
     const variance = estClass?.variance_pct ?? 30
     const totalLow = total * (1 - variance / 100)
     const totalHigh = total * (1 + variance / 100)
 
+    function addAddOn() {
+        setAddOns(prev => [...prev, { name: "", price: 0 }])
+    }
+    
+    function updateAddOn(index: number, field: "name" | "price", value: string) {
+        setAddOns(prev => prev.map((a, i) => i === index ? { ...a, [field]: field === "price" ? parseFloat(value) || 0 : value } : a))
+    }
+    
+    function removeAddOn(index: number) {
+        setAddOns(prev => prev.filter((_, i) => i !== index))
+    }
+    
     async function saveToAirtable() {
         setSaving(true)
         const fields: any = {
@@ -170,6 +184,7 @@ export default function EstimatorPage() {
             "Status": "draft",
             "Created At": new Date().toISOString().split("T")[0],
             "Created By": user?.emailAddresses[0]?.emailAddress ?? "",
+            "Add Ons": JSON.stringify(addOns),
         }
         if (kitOverride) fields["Kit Override"] = parseFloat(kitOverride)
     
@@ -395,9 +410,40 @@ return (
                 </Section>
 
                 {/* Notes */}
+                <Section title="Add Ons">
+                    {addOns.map((a, i) => (
+                        <div key={i} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                            <input
+                                value={a.name}
+                                onChange={e => updateAddOn(i, "name", e.target.value)}
+                                placeholder="e.g. Deck, Garage, Carport"
+                                style={{ ...inputStyle, flex: 2 }}
+                            />
+                            <input
+                                type="number"
+                                value={a.price || ""}
+                                onChange={e => updateAddOn(i, "price", e.target.value)}
+                                placeholder="$0"
+                                style={{ ...inputStyle, flex: 1 }}
+                            />
+                            <button
+                                onClick={() => removeAddOn(i)}
+                                style={{ padding: "10px 12px", background: "none", border: `1px solid ${C.rule}`, borderRadius: 4, cursor: "pointer", color: C.inkMuted, fontFamily: "system-ui, sans-serif", fontSize: 13 }}>
+                                ✕
+                            </button>
+                        </div>
+                    ))}
+                    <button
+                        onClick={addAddOn}
+                        style={{ padding: "10px 14px", background: "none", border: `1px solid ${C.rule}`, borderRadius: 4, cursor: "pointer", color: C.inkMid, fontFamily: "system-ui, sans-serif", fontSize: 12, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase" as const }}>
+                        + Add Item
+                    </button>
+                </Section>
+                
                 <Section title="Notes">
                     <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Any assumptions, site conditions, or context for this estimate…" rows={4} style={{ ...inputStyle, resize: "vertical" as const }} />
                 </Section>
+                
             </div>
 
             {/* Right — estimate output */}
@@ -447,6 +493,9 @@ return (
                         <EstLine label="Base Subtotal" value={baseSubtotal} bold />
                         <EstLine label={`Site Works (${(adjustedSiteRate * 100).toFixed(1)}%)`} value={siteWorksCost} />
                         <EstLine label={`Consulting (${(adjustedConsultingRate * 100).toFixed(1)}%)`} value={consultingCost} />
+                        {addOns.filter(a => a.price > 0).map((a, i) => (
+                            <EstLine key={i} label={a.name || "Add On"} value={a.price} />
+                        ))}
                         <div style={{ borderTop: `2px solid ${C.ink}`, margin: "12px 0" }} />
                         <EstLine label="Total Estimate" value={total} bold large />
 

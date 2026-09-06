@@ -36,6 +36,7 @@ export default function ProposalDetailPage() {
     const [saving, setSaving] = useState(false)
     const [requesting, setRequesting] = useState(false)
     const [isApprover, setIsApprover] = useState(false)
+    const [addOns, setAddOns] = useState<{name: string, price: number}[]>([])
 
     // Selections
     const [projectCode, setProjectCode] = useState("")
@@ -100,6 +101,11 @@ export default function ProposalDetailPage() {
             setConsultingMultiplier(f["Consulting Multiplier"] ?? 1.0)
             setNotes(f["Notes"] ?? "")
             setProposalStatus(f["Status"] ?? "draft")
+            try {
+                const savedAddOns = JSON.parse(f["Add Ons"] ?? "[]")
+                setAddOns(savedAddOns)
+            } catch { setAddOns([]) }
+
             if (f["Kit Override"]) setKitOverride(f["Kit Override"].toString())
             
             // Fetch approvers from Settings
@@ -164,11 +170,22 @@ export default function ProposalDetailPage() {
     const adjustedConsultingRate = baseConsultingRate * consultingMultiplier
     const consultingCost = adjustedConsultingRate * baseSubtotal
 
-    const total = baseSubtotal + siteWorksCost + consultingCost
+    const addOnsTotal = addOns.reduce((sum, a) => sum + a.price, 0)
+    const total = baseSubtotal + siteWorksCost + consultingCost + addOnsTotal
     const variance = estClass?.variance_pct ?? 30
     const totalLow = total * (1 - variance / 100)
     const totalHigh = total * (1 + variance / 100)
 
+    function addAddOn() {
+        setAddOns(prev => [...prev, { name: "", price: 0 }])
+    }
+    function updateAddOn(index: number, field: "name" | "price", value: string) {
+        setAddOns(prev => prev.map((a, i) => i === index ? { ...a, [field]: field === "price" ? parseFloat(value) || 0 : value } : a))
+    }
+    function removeAddOn(index: number) {
+        setAddOns(prev => prev.filter((_, i) => i !== index))
+    }
+    
     async function saveToAirtable() {
         setSaving(true)
         const fields: any = {
@@ -193,6 +210,7 @@ export default function ProposalDetailPage() {
             "Consulting Multiplier": consultingMultiplier,
             "Notes": notes,
             "Status": "draft",
+            "Add Ons": JSON.stringify(addOns),
         }
         if (kitOverride) fields["Kit Override"] = parseFloat(kitOverride)
 
@@ -240,6 +258,7 @@ export default function ProposalDetailPage() {
             "Consulting Multiplier": consultingMultiplier,
             "Notes": notes,
             "Status": "pending",
+            "Add Ons": JSON.stringify(addOns),
         }
 
         const saveRes = await fetch(`https://api.airtable.com/v0/appBYDH5PMbXLdaSk/tblPhWiFcCrFFF8Yq/${recordId}`, {
@@ -430,7 +449,21 @@ export default function ProposalDetailPage() {
                             <input type="number" value={kitOverride} onChange={e => setKitOverride(e.target.value)} placeholder={fmt(kitCostPrime)} style={inputStyle} />
                         </Field>
                     </Section>
-
+                    <div style={{ marginBottom: 32 }}>
+                        <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase", color: C.gold, marginBottom: 16, paddingBottom: 8, borderBottom: `1px solid ${C.rule}` }}>
+                            Add Ons
+                        </div>
+                        {addOns.map((a, i) => (
+                            <div key={i} style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
+                                <input value={a.name} onChange={e => updateAddOn(i, "name", e.target.value)} placeholder="e.g. Deck, Garage" style={{ ...inputStyle, flex: 2 }} />
+                                <input type="number" value={a.price || ""} onChange={e => updateAddOn(i, "price", e.target.value)} placeholder="$0" style={{ ...inputStyle, flex: 1 }} />
+                                <button onClick={() => removeAddOn(i)} style={{ padding: "10px 12px", background: "none", border: `1px solid ${C.rule}`, borderRadius: 4, cursor: "pointer", color: C.inkMuted, fontFamily: "system-ui, sans-serif", fontSize: 13 }}>✕</button>
+                            </div>
+                        ))}
+                        <button onClick={addAddOn} style={{ padding: "10px 14px", background: "none", border: `1px solid ${C.rule}`, borderRadius: 4, cursor: "pointer", color: C.inkMid, fontFamily: "system-ui, sans-serif", fontSize: 12, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase" as const }}>
+                            + Add Item
+                        </button>
+                    </div>               
                     <Section title="Notes">
                         <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={4} style={{ ...inputStyle, resize: "vertical" as const }} />
                     </Section>
@@ -470,6 +503,9 @@ export default function ProposalDetailPage() {
                             <EstLine label="Base Subtotal" value={baseSubtotal} bold />
                             <EstLine label={`Site Works (${(adjustedSiteRate * 100).toFixed(1)}%)`} value={siteWorksCost} />
                             <EstLine label={`Consulting (${(adjustedConsultingRate * 100).toFixed(1)}%)`} value={consultingCost} />
+                            {addOns.filter(a => a.price > 0).map((a, i) => (
+                                <EstLine key={i} label={a.name || "Add On"} value={a.price} />
+                            ))}
                             <div style={{ borderTop: `2px solid ${C.ink}`, margin: "12px 0" }} />
                             <EstLine label="Total Estimate" value={total} bold large />
 
@@ -487,6 +523,11 @@ export default function ProposalDetailPage() {
                         </div>
 
                         <div style={{ padding: "16px 24px", borderTop: `1px solid ${C.rule}`, display: "grid", gap: 8 }}>
+                        <button
+                        onClick={() => window.open(`/estimator/${recordId}/print`, '_blank')}
+                        style={{ width: "100%", padding: "12px", background: C.ink, color: C.white, border: "none", borderRadius: 4, fontSize: 12, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" as const, cursor: "pointer", fontFamily: "system-ui, sans-serif" }}>
+                        Create PDF →
+                        </button>
                         <button
                         onClick={saveToAirtable}disabled={saving}
                         style={{ width: "100%", padding: "12px", background: saving ? C.inkMuted : C.surface, color: C.ink, border: `1px solid ${C.rule}`, borderRadius: 4, fontSize: 12, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" as const, cursor: saving ? "not-allowed" : "pointer", fontFamily: "system-ui, sans-serif" }}>
