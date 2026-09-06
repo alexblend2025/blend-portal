@@ -58,6 +58,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ code: 
         evergreen1:        f["Evergreen1"] ?? "",
         evergreen2:        f["Evergreen2"] ?? "",
         contractLink:      f["Contract Link"] ?? "",
+        addOns:             f["Add Ons"] ?? "",
     }
 
     return (

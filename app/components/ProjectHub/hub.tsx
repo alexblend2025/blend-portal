@@ -88,7 +88,18 @@ function ProposalContent({ project }: { project: any }) {
                 <LineItem label="Construction" value={project.construction} />
                 <LineItem label="Site Work and Foundation" value={project.siteWork} />
                 <LineItem label="Consulting and Soft Costs" value={project.consulting} />
+                
+                {project.addOns && (() => {
+                    try {
+                        const addOns = JSON.parse(project.addOns)
+                        return addOns.filter((a: any) => a.price > 0).map((a: any, i: number) => (
+                            <LineItem key={i} label={a.name || "Add On"} value={`$${Math.round(a.price).toLocaleString("en-CA")}`} />
+                        ))
+                    } catch { return null }
+                })()}
                 <SubtotalRow label="Variable Sub-total" value={project.variableSubtotal} />
+
+                
 
                 <div style={{ display: "flex", justifyContent: "space-between", padding: "20px 0", fontSize: 18, fontWeight: 600, borderBottom: `2px solid ${C.ink}` }}>
                     <span>Total Estimated Cost</span>
@@ -98,8 +109,6 @@ function ProposalContent({ project }: { project: any }) {
                 <div style={{ marginTop: 16, fontSize: 12, color: C.inkMuted, lineHeight: 1.6 }}>
                     Variable costs are estimates and subject to change based on site conditions, local trade pricing, and final design. Kit pricing will be finalized once design is approved and engineering is complete. Site work and foundation assumes a level, readily accessible building site with standard soil conditions. Rock excavation, significant grade change, or extended servicing runs are not included.
                 </div>
-            </div>
-
             {/* Process */}
             <div style={{ marginBottom: 48 }}>
                 <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase" as const, color: C.gold, marginBottom: 20 }}>
@@ -197,6 +206,7 @@ function ProposalContent({ project }: { project: any }) {
                 </div>
             )}
         </div>
+    </div>
     )
 }
 

@@ -57,6 +57,13 @@ export default function ProposalPrintPage() {
     const siteWorksCost = f["Site Works Cost"] ?? 0
     const consultingCost = f["Consulting Cost"] ?? 0
     const total = f["Total Estimate"] ?? 0
+    const addOns: { name: string; price: number }[] = (() => {
+        try {
+            const parsed = JSON.parse(f["Add Ons"] ?? "[]")
+            return Array.isArray(parsed) ? parsed : []
+        } catch { return [] }
+    })()
+    const addOnsTotal = addOns.reduce((sum, a) => sum + (a.price || 0), 0)
     const low = f["Low Range"] ?? 0
     const high = f["High Range"] ?? 0
     const notes = f["Notes"] ?? ""
@@ -159,7 +166,10 @@ export default function ProposalPrintPage() {
                     <PrintLine label="Construction" value={constructionCost} />
                     <PrintLine label="Site Work and Foundation" value={siteWorksCost} />
                     <PrintLine label="Consulting and Soft Costs" value={consultingCost} />
-                    <PrintLine label="Variable Sub-total" value={siteWorksCost + consultingCost + constructionCost} bold border />
+                    {addOns.filter(a => a.price > 0).map((a, i) => (
+                        <PrintLine key={i} label={a.name || "Add On"} value={a.price} />
+                    ))}
+                    <PrintLine label="Variable Sub-total" value={siteWorksCost + consultingCost + constructionCost + addOnsTotal} bold border />
 
                     <PrintLine label="Total Estimated Cost" value={total} bold large border />
                 </div>

@@ -158,7 +158,17 @@ export default function EstimatorPage() {
         setAddOns(prev => prev.filter((_, i) => i !== index))
     }
     
+    // Floor pricing feeds baseSubtotal, which in turn drives site works,
+    // consulting and the total — so saving while it's held would persist
+    // internal numbers, not just show them.
+    function blockedByFloorView() {
+        if (!showFloor) return false
+        alert("Release the Floor view before saving — floor pricing is internal only.")
+        return true
+    }
+
     async function saveToAirtable() {
+        if (blockedByFloorView()) return
         setSaving(true)
         const fields: any = {
             "Project Code": projectCode,
@@ -207,6 +217,7 @@ export default function EstimatorPage() {
     }
 
     async function requestApproval() {
+    if (blockedByFloorView()) return
     setRequesting(true)
     
     // First save the proposal
@@ -465,9 +476,20 @@ return (
 
                     {/* Floor toggle */}
                     <div style={{ padding: "12px 24px", background: C.surface, borderBottom: `1px solid ${C.rule}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <span style={{ fontSize: 12, color: C.inkMuted }}>Show floor pricing</span>
+                        <span style={{ fontSize: 12, color: C.inkMuted }}>Floor pricing · internal only</span>
+                        {/* Momentary: floor pricing is only ever visible while held, so it
+                            can't be left on and saved into an estimate. */}
                         <button
-                            onClick={() => setShowFloor(!showFloor)}
+                            onMouseDown={() => setShowFloor(true)}
+                            onMouseUp={() => setShowFloor(false)}
+                            onMouseLeave={() => setShowFloor(false)}
+                            onTouchStart={() => setShowFloor(true)}
+                            onTouchEnd={() => setShowFloor(false)}
+                            onTouchCancel={() => setShowFloor(false)}
+                            onKeyDown={(e) => { if (e.key === " " || e.key === "Enter") setShowFloor(true) }}
+                            onKeyUp={(e) => { if (e.key === " " || e.key === "Enter") setShowFloor(false) }}
+                            onBlur={() => setShowFloor(false)}
+                            onContextMenu={(e) => e.preventDefault()}
                             style={{
                                 padding: "4px 12px",
                                 borderRadius: 20,
@@ -478,24 +500,40 @@ return (
                                 fontWeight: 600,
                                 cursor: "pointer",
                                 fontFamily: "system-ui, sans-serif",
+                                userSelect: "none",
+                                WebkitUserSelect: "none",
+                                touchAction: "none",
                             }}
                         >
-                            {showFloor ? "Floor" : "Prime"}
+                            {showFloor ? "Floor" : "Hold for Floor"}
                         </button>
                     </div>
 
                     {/* Line items */}
                     <div style={{ padding: "20px 24px" }}>
+                        {/* Grouped to match the client proposal and PDF: Construction is a
+                            variable cost to the client, even though it sits inside
+                            baseSubtotal for the percentage calculations below. */}
+                        <EstGroupLabel first>Kit Costs</EstGroupLabel>
                         <EstLine label="Design & Planning" value={dpFee} />
                         <EstLine label="Kit Cost" value={kitCost} sub={showFloor ? "Floor pricing" : "Prime pricing"} />
+                        <div style={{ borderTop: `1px solid ${C.rule}`, margin: "8px 0" }} />
+                        <EstLine label="Kit Sub-total" value={dpFee + kitCost} bold />
+
+                        <EstGroupLabel>Estimated Variable Costs</EstGroupLabel>
                         <EstLine label={`Construction (${fmt(adjustedConstructionRate)}/sqft)`} value={constructionCost} />
-                        <div style={{ borderTop: `1px solid ${C.rule}`, margin: "12px 0" }} />
-                        <EstLine label="Base Subtotal" value={baseSubtotal} bold />
                         <EstLine label={`Site Works (${(adjustedSiteRate * 100).toFixed(1)}%)`} value={siteWorksCost} />
                         <EstLine label={`Consulting (${(adjustedConsultingRate * 100).toFixed(1)}%)`} value={consultingCost} />
                         {addOns.filter(a => a.price > 0).map((a, i) => (
                             <EstLine key={i} label={a.name || "Add On"} value={a.price} />
                         ))}
+                        <div style={{ borderTop: `1px solid ${C.rule}`, margin: "8px 0" }} />
+                        <EstLine label="Variable Sub-total" value={constructionCost + siteWorksCost + consultingCost + addOnsTotal} bold />
+
+                        <div style={{ marginTop: 10 }}>
+                            <EstLine label="Base Subtotal" value={baseSubtotal} muted sub="D&P + Kit + Construction · the % rates above apply to this" />
+                        </div>
+
                         <div style={{ borderTop: `2px solid ${C.ink}`, margin: "12px 0" }} />
                         <EstLine label="Total Estimate" value={total} bold large />
 
@@ -562,14 +600,24 @@ return (
 )
 }
 
-function EstLine({ label, value, sub, bold, large }: { label: string; value: number; sub?: string; bold?: boolean; large?: boolean }) {
+function EstGroupLabel({ children, first }: { children: React.ReactNode; first?: boolean }) {
 return (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "5px 0" }}>
+    <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: C.inkMuted, paddingBottom: 6, marginBottom: 8, marginTop: first ? 0 : 20, borderBottom: `1px solid ${C.rule}` }}>
+        {children}
+    </div>
+)
+}
+
+function EstLine({ label, value, sub, bold, large, muted }: { label: string; value: number; sub?: string; bold?: boolean; large?: boolean; muted?: boolean }) {
+const size = large ? 15 : muted ? 11 : 13
+const color = muted ? C.inkMuted : C.ink
+return (
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: muted ? "3px 0" : "5px 0" }}>
         <div>
-            <div style={{ fontSize: large ? 15 : 13, fontWeight: bold ? 600 : 400, color: C.ink }}>{label}</div>
+            <div style={{ fontSize: size, fontWeight: bold ? 600 : 400, color }}>{label}</div>
             {sub && <div style={{ fontSize: 10, color: C.inkMuted, marginTop: 1 }}>{sub}</div>}
         </div>
-        <div style={{ fontSize: large ? 15 : 13, fontWeight: bold ? 600 : 400, color: C.ink, flexShrink: 0 }}>{fmt(value)}</div>
+        <div style={{ fontSize: size, fontWeight: bold ? 600 : 400, color, flexShrink: 0 }}>{fmt(value)}</div>
     </div>
 )
 }
