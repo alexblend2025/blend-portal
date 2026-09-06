@@ -35,6 +35,7 @@ export default function ProposalDetailPage() {
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [requesting, setRequesting] = useState(false)
+    const [isApprover, setIsApprover] = useState(false)
 
     // Selections
     const [projectCode, setProjectCode] = useState("")
@@ -100,6 +101,13 @@ export default function ProposalDetailPage() {
             setNotes(f["Notes"] ?? "")
             setProposalStatus(f["Status"] ?? "draft")
             if (f["Kit Override"]) setKitOverride(f["Kit Override"].toString())
+            
+            // Fetch approvers from Settings
+            const settingsRes = await fetch(`https://api.airtable.com/v0/appBYDH5PMbXLdaSk/tblDUBuJuUpi00ZhQ?maxRecords=1`, {headers: { Authorization: `Bearer ${process.env.NEXT_PUBLIC_AIRTABLE_KEY}` }})
+            const settingsData = await settingsRes.json()
+            const approvers = (settingsData.records?.[0]?.fields?.["Toolbox Users"] ?? "").split(",").map((e: string) => e.trim().toLowerCase())
+            const currentEmail = user?.emailAddresses[0]?.emailAddress?.toLowerCase() ?? ""
+            setIsApprover(approvers.includes(currentEmail))
 
             // Find model by name
             const modelName = f["Model Name"] ?? ""
@@ -272,6 +280,23 @@ export default function ProposalDetailPage() {
             alert("Approval request failed")
         }
         setRequesting(false)
+    }
+
+    async function approveProposal() {
+        const res = await fetch(`https://api.airtable.com/v0/appBYDH5PMbXLdaSk/tblPhWiFcCrFFF8Yq/${recordId}`, {
+            method: "PATCH",
+            headers: {
+                "Authorization": `Bearer ${process.env.NEXT_PUBLIC_AIRTABLE_KEY}`,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ fields: { "Status": "approved" } }),
+        })
+        if (res.ok) {
+            setProposalStatus("approved")
+            alert("Proposal approved")
+        } else {
+            alert("Approval failed")
+        }
     }
 
     if (loading) return <div style={{ padding: 48, fontFamily: "system-ui", color: C.inkMuted }}>Loading proposal…</div>
@@ -462,23 +487,32 @@ export default function ProposalDetailPage() {
                         </div>
 
                         <div style={{ padding: "16px 24px", borderTop: `1px solid ${C.rule}`, display: "grid", gap: 8 }}>
-                            <button
-                                onClick={saveToAirtable}
-                                disabled={saving}
-                                style={{ width: "100%", padding: "12px", background: saving ? C.inkMuted : C.surface, color: C.ink, border: `1px solid ${C.rule}`, borderRadius: 4, fontSize: 12, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" as const, cursor: saving ? "not-allowed" : "pointer", fontFamily: "system-ui, sans-serif" }}>
-                                {saving ? "Saving…" : "Save Draft"}
-                            </button>
-                            <button
-                                onClick={requestApproval}
-                                disabled={requesting}
-                                style={{ width: "100%", padding: "12px", background: requesting ? C.inkMuted : C.gold, color: C.white, border: "none", borderRadius: 4, fontSize: 12, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" as const, cursor: requesting ? "not-allowed" : "pointer", fontFamily: "system-ui, sans-serif" }}>
-                                {requesting ? "Requesting…" : "Request Approval →"}
-                            </button>
-                            <button
-                                disabled
-                                style={{ width: "100%", padding: "12px", background: C.white, color: C.inkMuted, border: `1px solid ${C.rule}`, borderRadius: 4, fontSize: 12, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" as const, cursor: "not-allowed", fontFamily: "system-ui, sans-serif" }}>
-                                Push to Project (requires approval)
-                            </button>
+                        <button
+                        onClick={saveToAirtable}disabled={saving}
+                        style={{ width: "100%", padding: "12px", background: saving ? C.inkMuted : C.surface, color: C.ink, border: `1px solid ${C.rule}`, borderRadius: 4, fontSize: 12, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" as const, cursor: saving ? "not-allowed" : "pointer", fontFamily: "system-ui, sans-serif" }}>
+                        {saving ? "Saving…" : proposalStatus === "approved" ? "Edit (requires re-approval)" : "Save Draft"}
+                        </button>
+                        {proposalStatus === "pending" && isApprover && (
+                        <button
+                        onClick={approveProposal}
+                        disabled={!isApprover}
+                        style={{ width: "100%", padding: "12px", background: isApprover ? C.green : C.inkMuted, color: C.white, border: "none", borderRadius: 4, fontSize: 12, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" as const, cursor: isApprover ? "pointer" : "not-allowed", fontFamily: "system-ui, sans-serif" }}>
+                        Approve Proposal ✓
+                        </button>
+                        )}
+{proposalStatus !== "pending" && (
+    <button
+        onClick={requestApproval}
+        disabled={requesting || proposalStatus === "approved"}
+        style={{ width: "100%", padding: "12px", background: requesting ? C.inkMuted : proposalStatus === "approved" ? C.surface : C.gold, color: proposalStatus === "approved" ? C.inkMuted : C.white, border: proposalStatus === "approved" ? `1px solid ${C.rule}` : "none", borderRadius: 4, fontSize: 12, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" as const, cursor: requesting || proposalStatus === "approved" ? "not-allowed" : "pointer", fontFamily: "system-ui, sans-serif" }}>
+        {requesting ? "Requesting…" : proposalStatus === "approved" ? "Already Approved" : "Request Approval →"}
+    </button>
+)}
+<button
+    disabled={proposalStatus !== "approved"}
+    style={{ width: "100%", padding: "12px", background: proposalStatus === "approved" ? C.ink : C.white, color: proposalStatus === "approved" ? C.white : C.inkMuted, border: `1px solid ${proposalStatus === "approved" ? C.ink : C.rule}`, borderRadius: 4, fontSize: 12, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" as const, cursor: proposalStatus === "approved" ? "pointer" : "not-allowed", fontFamily: "system-ui, sans-serif" }}>
+    Push to Project →
+</button>
                         </div>
                     </div>
                 </div>
